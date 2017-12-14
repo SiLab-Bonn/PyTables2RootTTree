@@ -24,7 +24,7 @@ def get_root_type_descriptor(numpy_type_descriptor):
         'uint16': 's',
         'int8': 'B',
         'uint8': 'b',
-        'float64' : 'f'
+        'float64' : 'd'
     }[str(numpy_type_descriptor)]
 
 
@@ -43,7 +43,7 @@ def get_c_type_descriptor(numpy_type_descriptor):
         'uint16': ctypes.c_ushort,
         'int8': ctypes.c_byte,
         'uint8': ctypes.c_ubyte,
-        'float64' : ctypes.c_longdouble,
+        'float64' : ctypes.c_double,
     }[str(numpy_type_descriptor)]
 
 
@@ -116,6 +116,7 @@ def convert_table(input_filename, output_filename, chunk_size = 50000):
 
 if __name__ == "__main__":
     
-    input_file = '/media/data/SHiP/SHiP-testbeam-September17/testbeam-analysis/tba_improvements_branch/board_10/set_trigger_delay/module_2/69_module_2_ext_trigger_scan_interpreted'
+    input_files = ['/media/data/SHiP/SHiP-testbeam-September17/testbeam-analysis/tba_improvements_branch/matching_moving_module_0/pix2/output/Tracks_aligned',
+                  '/media/data/SHiP/SHiP-testbeam-September17/testbeam-analysis/tba_improvements_branch/matching_moving_module_0/pix2/output/Tracks_aligned_reduced']
     
-    convert_table(input_file + '.h5', input_file + '.root', chunk_size = 50000)  # chose chunk_size parameter as big as possible to increase speed, but not too big otherwise program runs out of memory
+    for file in input_files: convert_table(file + '.h5', file + '.root', chunk_size = 50000)  # chose chunk_size parameter as big as possible to increase speed, but not too big otherwise program runs out of memory
