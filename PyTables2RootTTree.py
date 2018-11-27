@@ -1,8 +1,9 @@
 """
-This script converts a HDF5 pytables table into a CERN ROOT TTree.
+This script converts a HDF5/pytables table into a CERN ROOT TTree.
 Tested with ROOT 5.34.38, no support for ROOT 6.
 """
 import ctypes
+import os
 
 import tables as tb
 import numpy as np
@@ -52,7 +53,8 @@ def get_c_type_descriptor(numpy_type_descriptor):
 
 def init_tree_from_table(table, chunk_size=100000):
     ''' Initializes a ROOT tree from a HDF5 table.
-    Takes the HDF5 table column names and types and creates corresponding branches. If a chunk size is specified the branches will have the length of the chunk size and
+    Takes the HDF5 table column names and types and creates corresponding branches.
+    If a chunk size is specified the branches will have the length of the chunk size and
     an additional parameter is returned (as reference) to change the chunk size at a later stage.
 
     Parameters
@@ -66,25 +68,39 @@ def init_tree_from_table(table, chunk_size=100000):
     n_entries = None
     if chunk_size > 1:
         n_entries = ctypes.c_int(chunk_size)
-        tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/I')  # needs to be added, otherwise one cannot access chunk_size_tree
+        # needs to be added, otherwise one cannot access chunk_size_tree
+        tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/I')
     for column_name in table.dtype.names:
         tree.Branch(column_name, 'NULL', column_name + '[n_entries]/' + get_root_type_descriptor(table.dtype[column_name]) if chunk_size > 1 else column_name + '/' + get_root_type_descriptor(table.dtype[column_name]))
 
     return tree, n_entries
 
 
-def convert_table(input_filename, output_filename, chunk_size=100000):
-    ''' Creates a ROOT Tree by looping over chunks of the hdf5 table. Some pointer magic is used to increase the conversion speed.
+def convert_table(input_filename, output_filename=None, chunk_size=100000):
+    ''' Creates a ROOT Tree by looping over chunks of the hdf5 table.
+    Some pointer magic is used to increase the conversion speed.
 
     Parameters
     ----------
     input_filename : string
-        The file name of the hdf5 hit table.
+        The filename of the HDF5/pytables file.
     output_filename : string
-        The filename of the created ROOT file
+        The filename of the created ROOT file.
     chunk_size : int
         Chunk size of each read.
     '''
+    if os.path.splitext(input_filename)[1].strip().lower() != '.h5':
+        base_filename = input_filename
+        input_filename = input_filename + '.h5'
+    else:
+        base_filename = os.path.splitext(input_filename)[0]
+
+    if output_filename is None:
+        output_filename = base_filename + '.root'
+    else:
+        if os.path.splitext(output_filename)[1].strip().lower() != '.root':
+            output_filename = output_filename + '.root'
+
     with tb.open_file(input_filename, 'r') as in_file_h5:
         out_file_root = TFile(output_filename, 'RECREATE')
         # loop over all tables in input file
@@ -110,6 +126,6 @@ def convert_table(input_filename, output_filename, chunk_size=100000):
 
 
 if __name__ == "__main__":
-    input_files = ['input']
+    input_files = ['input.h5']
     for file in input_files:
-        convert_table(file + '.h5', file + '.root')
+        convert_table(file)
