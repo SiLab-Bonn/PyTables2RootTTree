@@ -52,8 +52,8 @@ def get_c_type_descriptor(numpy_type_descriptor):
 
 
 def init_tree_from_table(table, chunk_size=100000):
-    ''' Initializes a ROOT tree from a HDF5 table.
-    Takes the HDF5 table column names and types and creates corresponding branches.
+    ''' Initializes a ROOT tree from a HDF5/pytables table.
+    Takes the HDF5/pytables table column names and types and creates corresponding branches.
     If a chunk size is specified the branches will have the length of the chunk size and
     an additional parameter is returned (as reference) to change the chunk size at a later stage.
 
@@ -63,8 +63,7 @@ def init_tree_from_table(table, chunk_size=100000):
     chunk_size : int
     '''
     # Assign proper name for the TTree
-    tree_name = table.name
-    tree = TTree(tree_name, 'Converted HDF5 table')
+    tree = TTree(table.name, '%s table' % table.name)
     n_entries = None
     if chunk_size > 1:
         n_entries = ctypes.c_int(chunk_size)
@@ -77,15 +76,15 @@ def init_tree_from_table(table, chunk_size=100000):
 
 
 def convert_table(input_filename, output_filename=None, chunk_size=100000):
-    ''' Creates a ROOT Tree by looping over chunks of the hdf5 table.
+    ''' Creates a ROOT Tree by looping over chunks of the HDF5/pytables table.
     Some pointer magic is used to increase the conversion speed.
 
     Parameters
     ----------
     input_filename : string
-        The filename of the HDF5/pytables file.
+        The filename of the HDF5 input file containing the pytables table.
     output_filename : string
-        The filename of the created ROOT file.
+        The filename of the ROOT output file.
     chunk_size : int
         Chunk size of each read.
     '''
