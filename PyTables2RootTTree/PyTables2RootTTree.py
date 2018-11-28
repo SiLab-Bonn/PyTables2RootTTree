@@ -78,7 +78,7 @@ def init_tree_from_table(table):
     return tree, n_entries
 
 
-def convert_table(input_filename, output_filename=None, chunk_size=100000):
+def convert_table(input_filename, output_filename=None, names=None, chunk_size=100000):
     ''' Creates a ROOT Tree by looping over chunks of the HDF5/pytables table.
     Some pointer magic is used to increase the conversion speed.
 
@@ -88,6 +88,8 @@ def convert_table(input_filename, output_filename=None, chunk_size=100000):
         The filename of the HDF5 input file containing the pytables table.
     output_filename : string
         The filename of the ROOT output file.
+    names : string or list
+        List of table names that will be converted.
     chunk_size : int
         Chunk size of each read.
     '''
@@ -103,10 +105,15 @@ def convert_table(input_filename, output_filename=None, chunk_size=100000):
         if os.path.splitext(output_filename)[1].strip().lower() != '.root':
             output_filename = output_filename + '.root'
 
+    if not isinstance(names, (list, tuple)) and names is not None:
+        names = [names]
+
     with tb.open_file(input_filename, 'r') as in_file_h5:
         out_file_root = TFile(output_filename, 'RECREATE')
         # Loop over all tables in the input file
         for table in in_file_h5.iter_nodes('/', 'Table'):
+            if names is not None and table.name not in names:
+                continue
             tree, n_entries = init_tree_from_table(table)
             for index in range(0, table.shape[0], chunk_size):
                 hits = table.read(start=index, stop=index + chunk_size)
