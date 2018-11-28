@@ -1,0 +1,3 @@
+include README.* VERSION LICENSE
+recursive-include PyTables2RootTTree *
+global-exclude *.pyc .project .pydevproject build
