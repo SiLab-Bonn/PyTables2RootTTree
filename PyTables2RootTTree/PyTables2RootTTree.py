@@ -27,7 +27,9 @@ def get_root_type_descriptor(numpy_type_descriptor):
         'uint16': 's',
         'int8': 'B',
         'uint8': 'b',
-        'float64': 'd'
+        'float64': 'D',
+        'float32': 'F',
+        'bool': 'O'
     }[str(numpy_type_descriptor)]
 
 
@@ -48,6 +50,8 @@ def get_c_type_descriptor(numpy_type_descriptor):
         'int8': ctypes.c_byte,
         'uint8': ctypes.c_ubyte,
         'float64': ctypes.c_double,
+        'float32': ctypes.c_float,
+        'bool': ctypes.c_bool
     }[str(numpy_type_descriptor)]
 
 
