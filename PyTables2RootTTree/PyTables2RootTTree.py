@@ -55,26 +55,25 @@ def get_c_type_descriptor(numpy_type_descriptor):
     }[str(numpy_type_descriptor)]
 
 
-def init_tree_from_table(table, chunk_size=100000):
-    ''' Initializes a ROOT tree from a HDF5/pytables table.
-    Takes the HDF5/pytables table column names and types and creates corresponding branches.
+def init_tree_from_table(table):
+    ''' Initializes a ROOT TTree from a HDF5/pytables table.
+    A branch (TTree:Branch) is created for each column of the table to avoid alignment problems on different platforms.
     If a chunk size is specified the branches will have the length of the chunk size and
     an additional parameter is returned (as reference) to change the chunk size at a later stage.
 
     Parameters
     ----------
     table : pytables.table
-    chunk_size : int
+        Pytables table.
     '''
     # Assign proper name for the TTree
-    tree = TTree(table.name, '%s table' % table.name)
-    n_entries = None
-    if chunk_size > 1:
-        n_entries = ctypes.c_int(chunk_size)
-        # needs to be added, otherwise one cannot access chunk_size_tree
-        tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/I')
+    tree = TTree(table.name, table.name)
+    # TTree where branches are variable length arrays
+    n_entries = ctypes.c_int(0)
+    tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/I')
+    # Adding a branch for each column with address 0 (NULL), the address is set later
     for column_name in table.dtype.names:
-        tree.Branch(column_name, 'NULL', column_name + '[n_entries]/' + get_root_type_descriptor(table.dtype[column_name]) if chunk_size > 1 else column_name + '/' + get_root_type_descriptor(table.dtype[column_name]))
+        tree.Branch(column_name, 0, column_name + '[n_entries]/' + get_root_type_descriptor(table.dtype[column_name]))
 
     return tree, n_entries
 
@@ -106,25 +105,27 @@ def convert_table(input_filename, output_filename=None, chunk_size=100000):
 
     with tb.open_file(input_filename, 'r') as in_file_h5:
         out_file_root = TFile(output_filename, 'RECREATE')
-        # loop over all tables in input file
+        # Loop over all tables in the input file
         for table in in_file_h5.iter_nodes('/', 'Table'):
-            tree, chunk_size_tree = init_tree_from_table(table, chunk_size)
+            tree, n_entries = init_tree_from_table(table)
             for index in range(0, table.shape[0], chunk_size):
                 hits = table.read(start=index, stop=index + chunk_size)
-                # columns have to be in an additional python data container to prevent the carbage collector from deleting
+                # Columns have to be in an additional python data container to prevent the carbage collector from deleting
                 column_data = {}
-                # loop over the branches
-                for branch in tree.GetListOfBranches():
-                    if branch.GetName() != 'n_entries':
-                        # a copy has to be made to get the correct memory alignement
-                        column_data[branch.GetName()] = np.ascontiguousarray(hits[branch.GetName()])
-                        # get the column data pointer by name and tell the tree its address
-                        branch.SetAddress(column_data[branch.GetName()].data)
-                # decrease tree leave size for the last chunk
-                if index + chunk_size > table.shape[0]:
-                    chunk_size_tree.value = table.shape[0] - index
+                # Loop over the columns
+                for column_name in table.dtype.names:
+                    branch = tree.GetBranch(column_name)
+                    # Get a copy of the column
+                    column_data[column_name] = np.ascontiguousarray(hits[column_name])
+                    # Get the column data pointer by name and tell the tree its address
+                    branch.SetAddress(column_data[column_name].data)
+                # Set chunk size
+                n_entries.value = hits.shape[0]
+                # Fill TTree
                 tree.Fill()
+            # Write ROOT file
             out_file_root.Write()
+        # Close ROOT file
         out_file_root.Close()
 
 
