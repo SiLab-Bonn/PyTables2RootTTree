@@ -68,8 +68,8 @@ def init_tree_from_table(table):
     # Assign proper name for the TTree
     tree = TTree(table.name, table.name)
     # TTree where branches are variable length arrays
-    n_entries = ctypes.c_int(0)
-    tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/I')
+    n_entries = ctypes.c_int64(0)
+    tree.Branch('n_entries', ctypes.addressof(n_entries), 'n_entries/L')
     # Adding a branch for each column with address 0 (NULL), the address is set later
     for column_name in table.dtype.names:
         tree.Branch(column_name, 0, column_name + '[n_entries]/' + get_root_type_descriptor(table.dtype[column_name]))
