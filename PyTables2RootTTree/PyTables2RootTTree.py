@@ -6,7 +6,6 @@ import ctypes
 import os
 
 import tables as tb
-import numpy as np
 
 from ROOT import TFile, TTree
 
@@ -16,7 +15,7 @@ def get_root_type_descriptor(numpy_type_descriptor):
 
     Parameters
     ----------
-    numpy_type_descriptor: np.dtype
+    numpy_type_descriptor: numpy.dtype
     '''
     return{
         'int64': 'L',
@@ -38,7 +37,7 @@ def get_c_type_descriptor(numpy_type_descriptor):
 
     Parameters
     ----------
-    numpy_type_descriptor: np.dtype
+    numpy_type_descriptor: numpy.dtype
     '''
     return{
         'int64': ctypes.c_longlong,
@@ -123,7 +122,7 @@ def convert_table(input_filename, output_filename=None, names=None, chunk_size=1
                 for column_name in table.dtype.names:
                     branch = tree.GetBranch(column_name)
                     # Get a copy of the column
-                    column_data[column_name] = np.ascontiguousarray(hits[column_name])
+                    column_data[column_name] = hits[column_name].copy()
                     # Get the column data pointer by name and tell the tree its address
                     branch.SetAddress(column_data[column_name].data)
                 # Set chunk size
