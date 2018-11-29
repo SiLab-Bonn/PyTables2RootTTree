@@ -1,6 +1,6 @@
 """
 This script converts a HDF5/pytables table into a CERN ROOT TTree.
-Tested with ROOT 5.34.38, no support for ROOT 6.
+Tested with ROOT 5.34/38 and ROOT 6.14/08.
 """
 import ctypes
 import os

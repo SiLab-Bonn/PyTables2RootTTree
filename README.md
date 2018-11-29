@@ -1,4 +1,4 @@
 PyTables2RootTTree
 ==================
 
-Simple and fast script to convert a HDF5/pytables table to a CERN ROOT TTree. No special modules (e.g. rootpy) are needed.
+Converter from HDF5/pytables table to CERN ROOT TTree. CERN ROOT 5 and 6 is supported.
