@@ -57,8 +57,6 @@ def get_c_type_descriptor(numpy_type_descriptor):
 def init_tree_from_table(table):
     ''' Initializes a ROOT TTree from a HDF5/pytables table.
     A branch (TTree:Branch) is created for each column of the table to avoid alignment problems on different platforms.
-    If a chunk size is specified the branches will have the length of the chunk size and
-    an additional parameter is returned (as reference) to change the chunk size at a later stage.
 
     Parameters
     ----------
@@ -88,9 +86,9 @@ def convert_table(input_filename, output_filename=None, names=None, chunk_size=1
     output_filename : string
         The filename of the ROOT output file.
     names : string or list
-        List of table names that will be converted.
+        Table name or list of table names that will be converted to a TTree.
     chunk_size : int
-        Chunk size of each read.
+        Chunk size of each read and maximum length of each branch.
     '''
     if os.path.splitext(input_filename)[1].strip().lower() != '.h5':
         base_filename = input_filename
@@ -125,7 +123,7 @@ def convert_table(input_filename, output_filename=None, names=None, chunk_size=1
                     column_data[column_name] = hits[column_name].copy()
                     # Get the column data pointer by name and tell the tree its address
                     branch.SetAddress(column_data[column_name].data)
-                # Set chunk size
+                # Set array size
                 n_entries.value = hits.shape[0]
                 # Fill TTree
                 tree.Fill()
