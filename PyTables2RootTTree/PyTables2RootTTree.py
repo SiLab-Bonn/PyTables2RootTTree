@@ -40,14 +40,14 @@ def get_c_type_descriptor(numpy_type_descriptor):
     numpy_type_descriptor: numpy.dtype
     '''
     return{
-        'int64': ctypes.c_longlong,
-        'uint64': ctypes.c_ulonglong,
-        'int32': ctypes.c_int,
-        'uint32': ctypes.c_uint,
-        'int16': ctypes.c_short,
-        'uint16': ctypes.c_ushort,
-        'int8': ctypes.c_byte,
-        'uint8': ctypes.c_ubyte,
+        'int64': ctypes.c_int64,
+        'uint64': ctypes.c_uint64,
+        'int32': ctypes.c_int32,
+        'uint32': ctypes.c_uint32,
+        'int16': ctypes.c_int16,
+        'uint16': ctypes.c_uint16,
+        'int8': ctypes.c_int8,
+        'uint8': ctypes.c_uint8,
         'float64': ctypes.c_double,
         'float32': ctypes.c_float,
         'bool': ctypes.c_bool
