@@ -7,7 +7,7 @@ import os
 
 import tables as tb
 
-from ROOT import TFile, TTree
+from ROOT import TFile, TTree, TObject
 
 
 def get_root_type_descriptor(numpy_type_descriptor):
@@ -127,8 +127,8 @@ def convert_table(input_filename, output_filename=None, names=None, chunk_size=1
                 n_entries.value = hits.shape[0]
                 # Fill TTree
                 tree.Fill()
-            # Write ROOT file
-            out_file_root.Write()
+            # Write ROOT file, delete the previous cycle (written by AutoSave)
+            out_file_root.Write("", TObject.kOverwrite)
         # Close ROOT file
         out_file_root.Close()
 
